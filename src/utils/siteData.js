@@ -1,3 +1,6 @@
+import { db } from '../firebase/config'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+
 const defaultProducts = [
   { id: 1, img: '/img/products/anime-tee-1.jpg', name: 'Tanjiro Tee', nameAr: 'تيشيرت تانجيرو', price: 420, sale: false, category: 'T-Shirts', description: 'Premium quality anime t-shirt featuring Tanjiro from Demon Slayer.', stock: 20, sizes: ['S', 'M', 'L', 'XL'] },
   { id: 2, img: '/img/products/anime-tee-2.jpg', name: 'Gojo Hoodie', nameAr: 'هودي جوجو', price: 589, sale: true, category: 'Hoodies', description: 'Comfortable Gojo-inspired hoodie with cozy fleece lining.', stock: 15, sizes: ['M', 'L', 'XL', '2XL'] },
@@ -85,9 +88,26 @@ function lsSet(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)) } catch {}
 }
 
+const FS = 'data'
+
+async function fsRead(key, defaults) {
+  try {
+    const snap = await getDoc(doc(db, FS, key))
+    if (snap.exists()) return snap.data().items
+  } catch {}
+  return lsGet(key, defaults)
+}
+
+async function fsWrite(key, items) {
+  lsSet(key, items)
+  try { await setDoc(doc(db, FS, key), { items }) } catch {}
+}
+
 /* ─── Products ─── */
 export async function getProducts() {
-  return lsGet('admin_products', defaultProducts).map((p) => ({
+  const raw = await fsRead('admin_products', defaultProducts)
+  const list = Array.isArray(raw) && raw.length > 0 ? raw : defaultProducts
+  return list.map((p) => ({
     ...p,
     id: p.id != null ? p.id : Math.max(0, ...defaultProducts.map(d => d.id)) + 1,
     image: p.image != null && p.image !== '' ? p.image : (p.img || ''),
@@ -97,71 +117,74 @@ export async function getProducts() {
   }))
 }
 export async function addProduct(product) {
-  const list = lsGet('admin_products', defaultProducts)
+  const list = await fsRead('admin_products', defaultProducts)
   const nextId = Math.max(...list.map(p => p.id || 0), 0) + 1
   const item = { ...product, id: nextId }
   list.push(item)
-  lsSet('admin_products', list)
+  await fsWrite('admin_products', list)
   return item
 }
 export async function updateProduct(id, updates) {
-  const list = lsGet('admin_products', defaultProducts)
+  const list = await fsRead('admin_products', defaultProducts)
   const idx = list.findIndex(p => p.id === id)
   if (idx === -1) return null
   list[idx] = { ...list[idx], ...updates }
-  lsSet('admin_products', list)
+  await fsWrite('admin_products', list)
   return list[idx]
 }
 export async function deleteProduct(id) {
-  const list = lsGet('admin_products', defaultProducts)
-  lsSet('admin_products', list.filter(p => p.id !== id))
+  const list = await fsRead('admin_products', defaultProducts)
+  await fsWrite('admin_products', list.filter(p => p.id !== id))
 }
 export async function saveProduct(updated) {
-  const list = lsGet('admin_products', defaultProducts)
+  const list = await fsRead('admin_products', defaultProducts)
   const idx = list.findIndex(p => p.id === updated.id)
   if (idx !== -1) list[idx] = updated
   else { updated.id = Math.max(...list.map(p => p.id || 0), 0) + 1; list.push(updated) }
-  lsSet('admin_products', list)
+  await fsWrite('admin_products', list)
 }
 
 /* ─── Orders ─── */
 export async function getOrders() {
-  return lsGet('admin_orders', [])
+  return await fsRead('admin_orders', [])
 }
 export async function getOrdersByUser(userId) {
-  return (await getOrders()).filter(o => o.user_id === userId)
+  const list = await fsRead('admin_orders', [])
+  return list.filter(o => o.user_id === userId)
 }
 export async function addOrder(order) {
-  const list = await getOrders()
+  const list = await fsRead('admin_orders', [])
   const item = { ...order, id: Math.max(...list.map(o => o.id || 0), 0) + 1, created_at: new Date().toISOString() }
   list.unshift(item)
-  lsSet('admin_orders', list)
+  await fsWrite('admin_orders', list)
   return item
 }
 export async function updateOrderStatus(id, status) {
-  const list = await getOrders()
+  const list = await fsRead('admin_orders', [])
   const idx = list.findIndex(o => o.id === id)
   if (idx === -1) return null
   list[idx].status = status
-  lsSet('admin_orders', list)
+  await fsWrite('admin_orders', list)
   return list[idx]
 }
 export async function deleteOrder(id) {
-  const list = await getOrders()
-  lsSet('admin_orders', list.filter(o => o.id !== id))
+  const list = await fsRead('admin_orders', [])
+  await fsWrite('admin_orders', list.filter(o => o.id !== id))
 }
 export async function updateOrderTracking(id, trackingNumber) {
-  const list = await getOrders()
+  const list = await fsRead('admin_orders', [])
   const idx = list.findIndex(o => o.id === id)
   if (idx === -1) return null
   list[idx].trackingNumber = trackingNumber
-  lsSet('admin_orders', list)
+  await fsWrite('admin_orders', list)
   return list[idx]
 }
 
 /* ─── Blog Posts ─── */
 export async function getBlogPosts() {
-  return lsGet('admin_blog', defaultBlogPosts).map((p, i) => ({
+  const raw = await fsRead('admin_blog', defaultBlogPosts)
+  const list = Array.isArray(raw) && raw.length > 0 ? raw : defaultBlogPosts
+  return list.map((p, i) => ({
     ...p,
     id: p.id || i + 1,
     date: p.date || new Date().toISOString().split('T')[0],
@@ -170,89 +193,86 @@ export async function getBlogPosts() {
   }))
 }
 export async function addBlogPost(post) {
-  const list = lsGet('admin_blog', defaultBlogPosts)
+  const list = await fsRead('admin_blog', defaultBlogPosts)
   const nextId = Math.max(...list.map(p => p.id || 0), 0) + 1
   const item = { ...post, id: nextId, date: new Date().toISOString().split('T')[0] }
   list.push(item)
-  lsSet('admin_blog', list)
+  await fsWrite('admin_blog', list)
   return item
 }
 export async function updateBlogPost(id, updates) {
-  const list = lsGet('admin_blog', defaultBlogPosts)
+  const list = await fsRead('admin_blog', defaultBlogPosts)
   const idx = list.findIndex(p => p.id === id)
   if (idx === -1) return null
   list[idx] = { ...list[idx], ...updates }
-  lsSet('admin_blog', list)
+  await fsWrite('admin_blog', list)
   return list[idx]
 }
 export async function deleteBlogPost(id) {
-  const list = lsGet('admin_blog', defaultBlogPosts)
-  lsSet('admin_blog', list.filter(p => p.id !== id))
+  const list = await fsRead('admin_blog', defaultBlogPosts)
+  await fsWrite('admin_blog', list.filter(p => p.id !== id))
 }
 
 /* ─── Coupons ─── */
 export async function getCoupons() {
-  try {
-    const raw = localStorage.getItem('admin_coupons')
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
+  return await fsRead('admin_coupons', [])
 }
 export async function addCoupon(coupon) {
-  const list = await getCoupons()
+  const list = await fsRead('admin_coupons', [])
   const item = { ...coupon, id: Math.max(...list.map(c => c.id || 0), 0) + 1 }
   list.push(item)
-  lsSet('admin_coupons', list)
+  await fsWrite('admin_coupons', list)
   return item
 }
 export async function deleteCoupon(id) {
-  const list = await getCoupons()
-  lsSet('admin_coupons', list.filter(c => c.id !== id))
+  const list = await fsRead('admin_coupons', [])
+  await fsWrite('admin_coupons', list.filter(c => c.id !== id))
 }
 export async function updateCoupon(code, updates) {
-  const list = await getCoupons()
+  const list = await fsRead('admin_coupons', [])
   const idx = list.findIndex(c => c.code === code)
   if (idx === -1) return null
   list[idx] = { ...list[idx], ...updates }
-  lsSet('admin_coupons', list)
+  await fsWrite('admin_coupons', list)
   return list[idx]
 }
 export async function deleteCouponByCode(code) {
-  const list = await getCoupons()
-  lsSet('admin_coupons', list.filter(c => c.code !== code))
+  const list = await fsRead('admin_coupons', [])
+  await fsWrite('admin_coupons', list.filter(c => c.code !== code))
 }
 
 /* ─── Social Links ─── */
 export async function getSocialLinks() {
-  const obj = lsGet('admin_social', defaultSocial)
+  const obj = await fsRead('admin_social', defaultSocial)
   return Object.entries(obj).map(([platform, url]) => ({ platform, url, is_active: !!url, id: platform }))
 }
 export async function upsertSocialLinks(links) {
   const obj = {}
   links.forEach(l => { obj[l.platform] = l.url })
-  lsSet('admin_social', obj)
+  await fsWrite('admin_social', obj)
   return links
 }
 
 /* ─── Site Settings ─── */
 export async function getSiteSettings() {
-  const s = lsGet('admin_settings', defaultSettings)
+  const s = await fsRead('admin_settings', defaultSettings)
   const map = {}
   Object.entries(s).forEach(([k, v]) => { map[k] = v })
   return map
 }
 export async function upsertSiteSetting(key, value) {
-  const settings = lsGet('admin_settings', defaultSettings)
+  const settings = await fsRead('admin_settings', defaultSettings)
   settings[key] = value
-  lsSet('admin_settings', settings)
+  await fsWrite('admin_settings', settings)
   return { key, value }
 }
 export async function getSettings() {
-  return lsGet('admin_settings', defaultSettings)
+  return await fsRead('admin_settings', defaultSettings)
 }
 
 /* ─── Colors ─── */
 export async function getColors() {
-  return lsGet('admin_colors', defaultColors)
+  return await fsRead('admin_colors', defaultColors)
 }
 export function applyColors(colors) {
   const root = document.documentElement
@@ -267,77 +287,68 @@ export function applyColors(colors) {
 
 /* ─── Contact Messages ─── */
 export async function getContactMessages() {
-  try {
-    const raw = localStorage.getItem('admin_contact_messages')
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
+  return await fsRead('admin_contact_messages', [])
 }
 export async function addContactMessage(msg) {
-  const list = await getContactMessages()
+  const list = await fsRead('admin_contact_messages', [])
   const item = { ...msg, id: Math.max(...list.map(m => m.id || 0), 0) + 1, created_at: new Date().toISOString(), is_read: false }
   list.unshift(item)
-  lsSet('admin_contact_messages', list)
+  await fsWrite('admin_contact_messages', list)
   return item
 }
 export async function deleteContactMessage(id) {
-  const list = await getContactMessages()
-  lsSet('admin_contact_messages', list.filter(m => m.id !== id))
+  const list = await fsRead('admin_contact_messages', [])
+  await fsWrite('admin_contact_messages', list.filter(m => m.id !== id))
 }
 export async function markMessageRead(id) {
-  const list = await getContactMessages()
+  const list = await fsRead('admin_contact_messages', [])
   const m = list.find(msg => msg.id === id)
   if (m) m.is_read = true
-  lsSet('admin_contact_messages', list)
+  await fsWrite('admin_contact_messages', list)
 }
 
 /* ─── Gift Cards ─── */
 export async function getGiftCards() {
-  try {
-    const raw = localStorage.getItem('admin_gift_cards')
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
+  return await fsRead('admin_gift_cards', [])
 }
 export async function addGiftCard(card) {
-  const list = await getGiftCards()
+  const list = await fsRead('admin_gift_cards', [])
   const item = { ...card, id: Math.max(...list.map(c => c.id || 0), 0) + 1, created_at: new Date().toISOString() }
   list.push(item)
-  lsSet('admin_gift_cards', list)
+  await fsWrite('admin_gift_cards', list)
   return item
 }
 export async function updateGiftCard(id, updates) {
-  const list = await getGiftCards()
+  const list = await fsRead('admin_gift_cards', [])
   const idx = list.findIndex(c => c.id === id)
   if (idx === -1) return null
   list[idx] = { ...list[idx], ...updates }
-  lsSet('admin_gift_cards', list)
+  await fsWrite('admin_gift_cards', list)
   return list[idx]
 }
 export async function deleteGiftCard(id) {
-  const list = await getGiftCards()
-  lsSet('admin_gift_cards', list.filter(c => c.id !== id))
+  const list = await fsRead('admin_gift_cards', [])
+  await fsWrite('admin_gift_cards', list.filter(c => c.id !== id))
 }
 export async function deleteGiftCardByCode(code) {
-  const list = await getGiftCards()
-  lsSet('admin_gift_cards', list.filter(c => c.code !== code))
+  const list = await fsRead('admin_gift_cards', [])
+  await fsWrite('admin_gift_cards', list.filter(c => c.code !== code))
 }
 
 /* ─── Newsletter ─── */
 export async function getSubscribers() {
-  try {
-    const raw = localStorage.getItem('admin_subscribers')
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
+  return await fsRead('admin_subscribers', [])
 }
 export async function addSubscriber(email) {
-  const list = await getSubscribers()
+  const list = await fsRead('admin_subscribers', [])
   if (list.some(s => s.email === email)) return list.find(s => s.email === email)
   const item = { email, subscribed_at: new Date().toISOString() }
   list.push(item)
-  lsSet('admin_subscribers', list)
+  await fsWrite('admin_subscribers', list)
   return item
 }
 
-/* ─── Cart (per user) ─── */
+/* ─── Cart (per user — localStorage only) ─── */
 function cartKey(userId) { return `cart_${userId}` }
 export async function getCartItems(userId) {
   if (!userId) return []
@@ -394,7 +405,7 @@ export async function clearCart(userId) {
   try { localStorage.removeItem(cartKey(userId)) } catch {}
 }
 
-/* ─── Wishlist (per user) ─── */
+/* ─── Wishlist (per user — localStorage only) ─── */
 function wishlistKey(userId) { return `wishlist_${userId}` }
 export async function getWishlist(userId) {
   if (!userId) return []
@@ -432,7 +443,7 @@ export async function isInWishlist(userId, productId) {
   return ids.includes(productId)
 }
 
-/* ─── Profile ─── */
+/* ─── Profile (per user — localStorage only) ─── */
 export async function getProfile(userId) {
   if (!userId) return null
   try {
