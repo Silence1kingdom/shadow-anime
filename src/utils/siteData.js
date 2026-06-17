@@ -1,5 +1,16 @@
-import { db } from '../firebase/config'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+let _getDb = null
+async function getDb() {
+  if (!_getDb) {
+    const [{ getFirestore }, { doc, getDoc, setDoc }, { getDb: initDb }] = await Promise.all([
+      import('firebase/firestore'),
+      import('firebase/firestore'),
+      import('../firebase/config'),
+    ])
+    const db = initDb()
+    _getDb = { db, doc, getDoc, setDoc }
+  }
+  return _getDb
+}
 
 const defaultProducts = [
   { id: 1, img: '/img/products/anime-tee-1.jpg', name: 'Tanjiro Tee', nameAr: 'تيشيرت تانجيرو', price: 420, sale: false, category: 'T-Shirts', description: 'Premium quality anime t-shirt featuring Tanjiro from Demon Slayer.', stock: 20, sizes: ['S', 'M', 'L', 'XL'] },
@@ -92,6 +103,7 @@ const FS = 'data'
 
 async function fsRead(key, defaults) {
   try {
+    const { db, doc, getDoc } = await getDb()
     const snap = await getDoc(doc(db, FS, key))
     if (snap.exists()) return snap.data().items
   } catch {}
@@ -100,7 +112,10 @@ async function fsRead(key, defaults) {
 
 async function fsWrite(key, items) {
   lsSet(key, items)
-  try { await setDoc(doc(db, FS, key), { items }) } catch {}
+  try {
+    const { db, doc, setDoc } = await getDb()
+    await setDoc(doc(db, FS, key), { items })
+  } catch {}
 }
 
 /* ─── Products ─── */
