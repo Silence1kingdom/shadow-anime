@@ -113,10 +113,10 @@ export async function updateProduct(id, updates) {
   return list[idx]
 }
 export async function deleteProduct(id) {
-  const list = await getProducts()
+  const list = lsGet('admin_products', defaultProducts)
   lsSet('admin_products', list.filter(p => p.id !== id))
 }
-export function saveProduct(updated) {
+export async function saveProduct(updated) {
   const list = lsGet('admin_products', defaultProducts)
   const idx = list.findIndex(p => p.id === updated.id)
   if (idx !== -1) list[idx] = updated
@@ -170,7 +170,7 @@ export async function getBlogPosts() {
   }))
 }
 export async function addBlogPost(post) {
-  const list = await getBlogPosts()
+  const list = lsGet('admin_blog', defaultBlogPosts)
   const nextId = Math.max(...list.map(p => p.id || 0), 0) + 1
   const item = { ...post, id: nextId, date: new Date().toISOString().split('T')[0] }
   list.push(item)
@@ -178,7 +178,7 @@ export async function addBlogPost(post) {
   return item
 }
 export async function updateBlogPost(id, updates) {
-  const list = await getBlogPosts()
+  const list = lsGet('admin_blog', defaultBlogPosts)
   const idx = list.findIndex(p => p.id === id)
   if (idx === -1) return null
   list[idx] = { ...list[idx], ...updates }
@@ -186,7 +186,7 @@ export async function updateBlogPost(id, updates) {
   return list[idx]
 }
 export async function deleteBlogPost(id) {
-  const list = await getBlogPosts()
+  const list = lsGet('admin_blog', defaultBlogPosts)
   lsSet('admin_blog', list.filter(p => p.id !== id))
 }
 

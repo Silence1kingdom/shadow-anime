@@ -14,7 +14,7 @@ function Home() {
   const { recent } = useRecentlyViewed()
   const { t } = useI18n()
   useEffect(() => { getProducts().then(setProducts) }, [])
-  useEffect(() => { getSocialLinks().then(setSocialLinks) }, [])
+  useEffect(() => { getSocialLinks().then(data => { const obj = {}; data.forEach(link => { obj[link.platform] = link.url }); setSocialLinks(obj) }) }, [])
   const saveProducts = async (updated) => {
     const list = products.map(p => p.id === updated.id ? { ...updated, image: updated.image || updated.img, img: updated.img || updated.image } : p)
     setProducts(list)

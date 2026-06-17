@@ -33,7 +33,7 @@ function AdminProductEdit({ product, onClose, onSave }) {
       ...product,
       name,
       nameAr,
-      price: String(price),
+      price: Number(price),
       sale,
       img: image,
       image,
