@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../../context/I18nContext'
-import { getProducts, getOrders, getBlogPosts } from '../../supabase/data'
-import { getSiteSettings } from '../../supabase/data'
+import { getProducts, getOrders, getBlogPosts } from '../../utils/siteData'
+import { getSiteSettings } from '../../utils/siteData'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 const pageTitle = { fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 28 }

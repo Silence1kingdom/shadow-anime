@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { getWishlist, addToWishlist as addWishlistItem, removeFromWishlist as removeWishlistItem } from '../supabase/data'
+import { getWishlist, addToWishlist as addWishlistItem, removeFromWishlist as removeWishlistItem } from '../utils/siteData'
 import { useAuth } from './AuthContext'
 
 const WishlistContext = createContext()
@@ -10,7 +10,7 @@ export function WishlistProvider({ children }) {
 
   useEffect(() => {
     if (user) {
-      getWishlist(user.id).then(data => {
+      getWishlist(user.uid).then(data => {
         setWishlist(data.map(item => item.products || item))
       })
     } else {
@@ -22,10 +22,10 @@ export function WishlistProvider({ children }) {
     if (!user) return
     const exists = wishlist.some(p => p.id === product.id)
     if (exists) {
-      await removeWishlistItem(user.id, product.id)
+      await removeWishlistItem(user.uid, product.id)
       setWishlist(prev => prev.filter(p => p.id !== product.id))
     } else {
-      await addWishlistItem(user.id, product.id)
+      await addWishlistItem(user.uid, product.id)
       setWishlist(prev => [...prev, product])
     }
   }, [user, wishlist])

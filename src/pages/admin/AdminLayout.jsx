@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useI18n } from '../../context/I18nContext'
 import { ToastProvider } from '../../components/Toast'
-import { getOrders } from '../../supabase/data'
+import { getOrders } from '../../utils/siteData'
 
 const sidebarWidth = 240
 

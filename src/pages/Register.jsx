@@ -160,8 +160,7 @@ function Register() {
     }
     setLoading(true)
     try {
-      const { error } = await signUp(email, password, name)
-      if (error) throw error
+      await signUp(email, password, name)
       navigate('/')
     } catch (err) {
       setError(err.code === 'auth/email-already-in-use' ? 'Email already registered' : err.code === 'auth/weak-password' ? 'Password too weak (min 6 chars)' : t('auth.errorGeneric'))
@@ -171,11 +170,14 @@ function Register() {
 
   const handleGoogle = async () => {
     setError('')
+    setLoading(true)
     try {
       await signInWithGoogle()
+      navigate('/')
     } catch {
       setError(t('auth.errorGeneric'))
     }
+    setLoading(false)
   }
 
   return (
@@ -276,14 +278,15 @@ function Register() {
           </div>
 
           <button
-            style={btnGoogleStyle}
+            style={{ ...btnGoogleStyle, opacity: loading ? 0.6 : 1 }}
             type="button"
             onClick={handleGoogle}
-            onMouseEnter={(e) => { e.target.style.opacity = '0.9' }}
-            onMouseLeave={(e) => { e.target.style.opacity = '1' }}
+            disabled={loading}
+            onMouseEnter={(e) => { e.target.style.opacity = loading ? '0.6' : '0.9' }}
+            onMouseLeave={(e) => { e.target.style.opacity = loading ? '0.6' : '1' }}
           >
             <i className="fa fa-google"></i>
-            {t('auth.signUpGoogle')}
+            {loading ? <><i className="fa fa-spinner fa-spin" style={{ marginRight: 6 }} />{t('auth.signingIn')}</> : t('auth.signUpGoogle')}
           </button>
 
           <div style={footerStyle}>

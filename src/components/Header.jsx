@@ -4,7 +4,7 @@ import { useI18n } from '../context/I18nContext'
 import { useTheme } from '../context/ThemeContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
-import { getCartItems } from '../supabase/data'
+import { getCartItems } from '../utils/siteData'
 
 const navLinks = [
   { path: '/', labelKey: 'nav.home' },
@@ -50,7 +50,7 @@ function Header() {
   useEffect(() => {
     if (!user) { setCartCount(0); setCartTotal(0); return }
     function updateCart() {
-      getCartItems(user.id).then(items => {
+      getCartItems(user.uid).then(items => {
         setCartCount(items.length)
         setCartTotal(items.reduce((sum, item) => sum + (Number(item.products?.price || 0)) * (item.quantity || 1), 0))
       }).catch(() => { setCartCount(0); setCartTotal(0) })

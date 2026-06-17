@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useI18n } from '../../context/I18nContext'
-import { getContactMessages, deleteContactMessage } from '../../supabase/data'
+import { getContactMessages, deleteContactMessage } from '../../utils/siteData'
 
 const btnDanger = { padding: '6px 14px', border: 'none', borderRadius: 4, background: 'var(--rose)', color: '#fff', fontSize: 13, cursor: 'pointer' }
 

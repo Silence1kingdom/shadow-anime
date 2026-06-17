@@ -18,13 +18,13 @@ export function I18nProvider({ children }) {
     document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr')
   }, [])
 
-  const t = useCallback((key) => {
+  const t = useCallback((key, fallback) => {
     const keys = key.split('.')
     let val = locales[lang]
     for (const k of keys) {
       val = val?.[k]
     }
-    return val || key
+    return val || fallback || key
   }, [lang])
 
   return (

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '../../components/Toast'
 import { useI18n } from '../../context/I18nContext'
-import { supabase } from '../../supabase/config'
-import { getGiftCards, addGiftCard } from '../../supabase/data'
+import { getGiftCards, addGiftCard, deleteGiftCardByCode } from '../../utils/siteData'
 
 const inputStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 6,
@@ -55,7 +54,7 @@ function AdminGiftCards() {
   }
 
   const handleDelete = async (code) => {
-    await supabase.from('gift_cards').delete().eq('code', code)
+    await deleteGiftCardByCode(code)
     const updated = await getGiftCards()
     setCards(updated)
   }

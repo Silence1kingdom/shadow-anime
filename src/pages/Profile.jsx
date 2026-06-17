@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useI18n } from '../context/I18nContext'
 import { useWishlist } from '../context/WishlistContext'
-import { getOrdersByUser, getCartItems, getProfile, updateProfile as supabaseUpdateProfile, getSiteSettings, updateOrderStatus } from '../supabase/data'
+import { getOrdersByUser, getCartItems, getProfile, updateProfile as supabaseUpdateProfile, getSiteSettings, updateOrderStatus } from '../utils/siteData'
 
 const statusColors = {
   Pending: '#f59e0b',
@@ -75,14 +75,14 @@ function Profile() {
     getSiteSettings().then(s => {
       if (s.freeShippingThreshold) setFreeThreshold(Number(s.freeShippingThreshold))
     })
-    getProfile(user.id).then(profile => {
+    getProfile(user.uid).then(profile => {
       if (profile) {
         if (profile.phone) setPhone(profile.phone)
         if (profile.address) setAddress(profile.address)
       }
     }).catch(() => {})
-    getOrdersByUser(user.id).then(setOrders).catch(() => {})
-    getCartItems(user.id).then(data => {
+    getOrdersByUser(user.uid).then(setOrders).catch(() => {})
+    getCartItems(user.uid).then(data => {
       setCartItems(data.map(item => ({
         id: item.product_id,
         img: item.products?.image || item.products?.img || '',
@@ -97,7 +97,7 @@ function Profile() {
 
   const saveProfile = async () => {
     if (user) {
-      await supabaseUpdateProfile(user.id, { phone, address }).catch(() => {})
+      await supabaseUpdateProfile(user.uid, { phone, address }).catch(() => {})
     }
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)

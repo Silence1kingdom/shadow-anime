@@ -4,7 +4,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useRecentlyViewed } from '../context/RecentlyViewedContext'
 import { useAuth } from '../context/AuthContext'
 import { getProducts } from '../utils/siteData'
-import { addToCart as supabaseAddToCart } from '../supabase/data'
+import { addToCart as supabaseAddToCart } from '../utils/siteData'
 import { useToast } from '../components/Toast'
 import { useI18n } from '../context/I18nContext'
 
@@ -77,9 +77,11 @@ function ShopDetails() {
 
   const addToCart = async () => {
     if (sizes.length > 0 && !selectedSize) { toast?.('Please select a size', 'warning'); return }
-    if (user) {
-      await supabaseAddToCart(user.id, product.id, qty)
-    }
+    try {
+      if (user) {
+        await supabaseAddToCart(user.uid, product.id, qty)
+      }
+    } catch { /* silently ignore */ }
     setAdded(true)
     setNotification(true)
     toast?.('Added to cart!', 'success')
@@ -89,9 +91,11 @@ function ShopDetails() {
 
   const buyNow = async () => {
     if (sizes.length > 0 && !selectedSize) { toast?.('Please select a size', 'warning'); return }
-    if (user) {
-      await supabaseAddToCart(user.id, product.id, qty)
-    }
+    try {
+      if (user) {
+        await supabaseAddToCart(user.uid, product.id, qty)
+      }
+    } catch { /* silently ignore */ }
     navigate('/checkout')
   }
 
@@ -166,7 +170,7 @@ function ShopDetails() {
                   ))}
                   <span style={{ marginLeft: 8, color: 'var(--text-muted)', fontSize: 13 }}>({productReviews.length} reviews)</span>
                 </div>
-                <p>{product.desc}</p>
+                <p>{product.description}</p>
                 <div className="shop__details__option">
                   <div className="shop__details__option__size">
                     <span>{t('product.size')}</span>

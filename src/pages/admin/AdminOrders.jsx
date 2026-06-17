@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useI18n } from '../../context/I18nContext'
-import { supabase } from '../../supabase/config'
-import { getOrders, updateOrderStatus } from '../../supabase/data'
+import { getOrders, updateOrderStatus, deleteOrder, updateOrderTracking } from '../../utils/siteData'
 
 const pageTitle = {
   fontSize: 24,
@@ -50,7 +49,7 @@ function AdminOrders() {
 
   const deleteOrder = async (id) => {
     if (!confirm(t('admin.deleteOrderConfirm'))) return
-    await supabase.from('orders').delete().eq('id', id)
+    await deleteOrder(id)
     const updated = await getOrders()
     setOrders(updated)
     if (selected?.id === id) setSelected(null)
@@ -59,7 +58,7 @@ function AdminOrders() {
   const setTracking = async (id) => {
     const num = trackingInput[id]
     if (!num) return
-    await supabase.from('orders').update({ trackingNumber: num }).eq('id', id)
+    await updateOrderTracking(id, num)
     const updated = await getOrders()
     setOrders(updated)
     if (selected?.id === id) {

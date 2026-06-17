@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getCartItems, getCoupons, getSiteSettings, getGiftCards, updateGiftCard, addOrder, addSubscriber } from '../supabase/data'
+import { getCartItems, getSiteSettings, getGiftCards, updateGiftCard, addOrder } from '../utils/siteData'
 import emailjs from '@emailjs/browser'
 
 const inputStyle = {
@@ -68,7 +68,7 @@ function Payment() {
       if (s.freeShippingThreshold) setFreeThreshold(Number(s.freeShippingThreshold))
     })
     if (fromCart) {
-      getCartItems(user.id).then(data => {
+      getCartItems(user.uid).then(data => {
         const items = data.map(item => ({
           id: item.product_id,
           img: item.products?.image || item.products?.img || '',

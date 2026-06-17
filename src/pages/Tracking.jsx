@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getOrders } from '../supabase/data'
+import { getOrders } from '../utils/siteData'
 
 const statusFlow = ['Pending', 'Packing', 'Shipped', 'Delivered']
 const statusColors = { Pending: '#f59e0b', Packing: '#3b82f6', Shipped: 'var(--purple)', Delivered: '#22c55e', Rejected: 'var(--rose)' }

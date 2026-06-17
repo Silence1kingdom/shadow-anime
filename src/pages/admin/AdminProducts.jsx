@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useI18n } from '../../context/I18nContext'
-import { getProducts, addProduct, updateProduct, deleteProduct } from '../../supabase/data'
+import { getProducts, addProduct, updateProduct, deleteProduct } from '../../utils/siteData'
 
 const inputStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 6,
@@ -42,6 +42,20 @@ function AdminProducts() {
   useEffect(() => {
     getProducts().then(setProducts)
   }, [])
+
+  useEffect(() => {
+    const filtered = products.filter(p => {
+      if (categoryFilter !== 'All' && p.category !== categoryFilter) return false
+      if (!searchTerm) return true
+      const term = searchTerm.toLowerCase()
+      return p.name.toLowerCase().includes(term) ||
+        (p.nameAr || '').toLowerCase().includes(term) ||
+        p.category.toLowerCase().includes(term)
+    })
+    const totalPages = Math.ceil(filtered.length / perPage)
+    const safePage = Math.min(page, Math.max(totalPages, 1))
+    if (safePage !== page) setPage(safePage)
+  }, [page, products, categoryFilter, searchTerm])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -226,7 +240,6 @@ function AdminProducts() {
               })
               const totalPages = Math.ceil(filtered.length / perPage)
               const safePage = Math.min(page, Math.max(totalPages, 1))
-              if (safePage !== page) setPage(safePage)
               const paginated = filtered.slice((safePage - 1) * perPage, safePage * perPage)
               return paginated.map((p, i) => (
                 <tr key={p.id} style={{ color: 'var(--text-primary)', borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>

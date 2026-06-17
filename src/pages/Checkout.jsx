@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useI18n } from '../context/I18nContext'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
-import { getCartItems, getCoupons } from '../supabase/data'
+import { getCartItems, getCoupons } from '../utils/siteData'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -65,7 +65,7 @@ function Checkout() {
 
   useEffect(() => {
     if (user) {
-      getCartItems(user.id).then(data => {
+      getCartItems(user.uid).then(data => {
         const items = data.map(item => ({
           id: item.product_id,
           img: item.products?.image || item.products?.img || '',
@@ -239,7 +239,7 @@ function Checkout() {
                                 const match = coupons.find(c => c.code === couponCode.trim().toUpperCase())
                                 if (match) {
                                   const isExpired = match.expiresAt && new Date(match.expiresAt) < new Date()
-                                  if (isExpired) { setCouponDiscount(0); setCouponMsg('Coupon has expired'); return }
+                                  if (isExpired) { setCouponDiscount(0); setCouponType('percentage'); setCouponMsg('Coupon has expired'); return }
                                   if (match.minAmount && total < Number(match.minAmount)) { setCouponDiscount(0); setCouponType('percentage'); setCouponMsg('Minimum order EGP ' + match.minAmount + ' not met'); return }
                                   const disc = Number(match.value) || 0
                                   setCouponDiscount(disc)
@@ -252,12 +252,13 @@ function Checkout() {
                                   try { localStorage.setItem('coupon_applied_code', match.code) } catch {}
                                 } else {
                                   setCouponDiscount(0)
+                                  setCouponType('percentage')
                                   setCouponMsg('Invalid or expired coupon')
                                   try { localStorage.removeItem('coupon_discount') } catch {}
                                   try { localStorage.removeItem('coupon_discount_type') } catch {}
                                   try { localStorage.removeItem('coupon_applied_code') } catch {}
                                 }
-                              } catch { setCouponDiscount(0); setCouponMsg('Error applying coupon'); try { localStorage.removeItem('coupon_discount') } catch {}; try { localStorage.removeItem('coupon_discount_type') } catch {}; try { localStorage.removeItem('coupon_applied_code') } catch {} }
+                              } catch { setCouponDiscount(0); setCouponType('percentage'); setCouponMsg('Error applying coupon'); try { localStorage.removeItem('coupon_discount') } catch {}; try { localStorage.removeItem('coupon_discount_type') } catch {}; try { localStorage.removeItem('coupon_applied_code') } catch {} }
                             }} style={{
                               padding: '8px 14px', border: 'none', borderRadius: 6,
                               background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',

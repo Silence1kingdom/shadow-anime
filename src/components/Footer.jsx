@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../context/I18nContext'
-import { getSiteSettings, addSubscriber, getSubscribers } from '../supabase/data'
+import { getSiteSettings, addSubscriber, getSubscribers } from '../utils/siteData'
 
 function Footer() {
   const { t } = useI18n()

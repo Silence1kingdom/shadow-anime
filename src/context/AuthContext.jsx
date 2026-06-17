@@ -1,7 +1,14 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
-import { fbAuth } from '../firebase/config'
-import { supabase } from '../supabase/config'
+import { auth } from '../firebase/config'
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  updateProfile,
+  signOut as firebaseSignOut,
+} from 'firebase/auth'
 
 const AuthContext = createContext()
 const ADMIN_EMAIL = 'vectorblack03@gmail.com'
@@ -11,49 +18,32 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-    return () => subscription?.unsubscribe()
+    return unsub
   }, [])
 
   const isAdmin = user?.email === ADMIN_EMAIL
 
-  const signIn = (email, password) =>
-    supabase.auth.signInWithPassword({ email, password })
-
-  const signUp = (email, password, name) =>
-    supabase.auth.signUp({ email, password, options: { data: { full_name: name || email.split('@')[0] } } })
+  const signIn = (email, password) => signInWithEmailAndPassword(auth, email, password)
+  const signUp = async (email, password, name) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password)
+    if (name) await updateProfile(cred.user, { displayName: name }).catch(() => {})
+    return cred
+  }
 
   const signInWithGoogle = async () => {
-    const result = await signInWithPopup(fbAuth, googleProvider)
-    const credential = GoogleAuthProvider.credentialFromResult(result)
-    const googleIdToken = credential.idToken
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
-      token: googleIdToken,
-    })
-    if (error) throw error
-    return data
+    const provider = new GoogleAuthProvider()
+    const result = await signInWithPopup(auth, provider)
+    return result.user
   }
 
-  const signInWithMagicLink = async (email) => {
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true, redirectTo: window.location.origin }
-    })
-    if (error) throw error
-    return data
-  }
-
-  const signOut = () => supabase.auth.signOut()
+  const signOut = () => firebaseSignOut(auth)
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signInWithMagicLink, signOut, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../context/I18nContext'
 import { useAuth } from '../context/AuthContext'
-import { getCartItems, updateCartItem as supabaseUpdateCartItem, removeCartItem as supabaseRemoveCartItem, getCoupons, getSiteSettings } from '../supabase/data'
+import { getCartItems, getCoupons, updateCartItem as supabaseUpdateCartItem, removeCartItem as supabaseRemoveCartItem, getSiteSettings } from '../utils/siteData'
 
 const defaultItems = [
   { id: 1, img: '/img/products/anime-tee-1.jpg', name: 'Tanjiro Kamado Tee', price: 520, qty: 1 },
@@ -28,7 +28,7 @@ function ShoppingCart() {
 
   useEffect(() => {
     if (user) {
-      getCartItems(user.id).then(data => {
+      getCartItems(user.uid).then(data => {
         if (data.length > 0) {
           setItems(data.map(item => ({
             id: item.product_id,
@@ -186,7 +186,7 @@ function ShoppingCart() {
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-6">
                       <div className="continue__btn update__btn">
-                        <span onClick={() => user && getCartItems(user.id).then(data => {
+                        <span onClick={() => user && getCartItems(user.uid).then(data => {
                           setItems(data.length > 0 ? data.map(item => ({
                             id: item.product_id,
                             cartItemId: item.id,

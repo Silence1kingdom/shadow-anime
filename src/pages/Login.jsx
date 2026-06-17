@@ -166,6 +166,7 @@ function Login() {
     setLoading(true)
     try {
       await signInWithGoogle()
+      navigate(from, { replace: true })
     } catch (err) {
       setError(t('auth.errorGeneric'))
     }
@@ -234,6 +235,24 @@ function Login() {
           </button>
 
           {error && <p style={errorStyle}>{error}</p>}
+
+          <div style={dividerStyle}>
+            <span style={dividerLineStyle}></span>
+            <span>{t('auth.or')}</span>
+            <span style={dividerLineStyle}></span>
+          </div>
+
+          <button
+            style={btnGoogleStyle}
+            type="button"
+            onClick={handleGoogle}
+            disabled={loading}
+            onMouseEnter={(e) => { e.target.style.opacity = '0.9' }}
+            onMouseLeave={(e) => { e.target.style.opacity = '1' }}
+          >
+            <i className="fa fa-google"></i>
+            {loading ? <><i className="fa fa-spinner fa-spin" style={{ marginRight: 6 }} />{t('auth.signingIn')}</> : t('auth.signInGoogle')}
+          </button>
 
           <div style={footerStyle}>
             {t('auth.noAccount')}{' '}

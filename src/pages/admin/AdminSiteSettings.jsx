@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useI18n } from '../../context/I18nContext'
-import { getSiteSettings, upsertSiteSetting } from '../../supabase/data'
+import { getSiteSettings, upsertSiteSetting } from '../../utils/siteData'
 
 const inputStyle = {
   width: '100%',

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { applyColors } from '../../utils/siteData'
 import { useI18n } from '../../context/I18nContext'
-import { getSiteSettings, upsertSiteSetting } from '../../supabase/data'
+import { getSiteSettings, upsertSiteSetting } from '../../utils/siteData'
 
 const inputStyle = {
   width: '100%',
@@ -44,9 +44,11 @@ function AdminColors() {
   useEffect(() => {
     getSiteSettings().then(settings => {
       if (settings.admin_colors) {
-        const parsed = typeof settings.admin_colors === 'string' ? JSON.parse(settings.admin_colors) : settings.admin_colors
-        setColors(prev => ({ ...prev, ...parsed }))
-        applyColors(parsed)
+        try {
+          const parsed = typeof settings.admin_colors === 'string' ? JSON.parse(settings.admin_colors) : settings.admin_colors
+          setColors(prev => ({ ...prev, ...parsed }))
+          applyColors(parsed)
+        } catch {}
       }
     })
   }, [])

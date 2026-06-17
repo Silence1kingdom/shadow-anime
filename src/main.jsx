@@ -6,22 +6,25 @@ import { I18nProvider } from './context/I18nContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { RecentlyViewedProvider } from './context/RecentlyViewedContext'
 import { AuthProvider } from './context/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
-          <I18nProvider>
-            <WishlistProvider>
-              <RecentlyViewedProvider>
-                <App />
-              </RecentlyViewedProvider>
-            </WishlistProvider>
-          </I18nProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
+            <I18nProvider>
+              <WishlistProvider>
+                <RecentlyViewedProvider>
+                  <App />
+                </RecentlyViewedProvider>
+              </WishlistProvider>
+            </I18nProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>,
 )

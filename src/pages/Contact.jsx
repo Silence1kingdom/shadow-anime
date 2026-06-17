@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../context/I18nContext'
 import { useToast } from '../components/Toast'
-import { addContactMessage } from '../supabase/data'
+import { addContactMessage } from '../utils/siteData'
 
 function Contact() {
   const { t } = useI18n()

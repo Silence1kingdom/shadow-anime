@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '../../components/Toast'
 import { useI18n } from '../../context/I18nContext'
-import { supabase } from '../../supabase/config'
-import { getCoupons, addCoupon } from '../../supabase/data'
+import { getCoupons, addCoupon, updateCoupon, deleteCouponByCode } from '../../utils/siteData'
 
 const inputStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 6,
@@ -44,7 +43,7 @@ function AdminCoupons() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (editId) {
-      await supabase.from('coupons').update({ ...form, value: Number(form.value), minAmount: Number(form.minAmount) || 0 }).eq('code', editId)
+      await updateCoupon(editId, { ...form, value: Number(form.value), minAmount: Number(form.minAmount) || 0 })
     } else {
       const existing = await getCoupons()
       if (existing.some(c => c.code === form.code)) { toast(t('admin.couponExists'), 'error'); return }
@@ -58,7 +57,7 @@ function AdminCoupons() {
 
   const del = async (code) => {
     if (!confirm(t('admin.deleteCouponConfirm'))) return
-    await supabase.from('coupons').delete().eq('code', code)
+    await deleteCouponByCode(code)
     const updated = await getCoupons()
     setCoupons(updated)
   }
