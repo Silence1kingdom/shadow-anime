@@ -87,17 +87,17 @@ function lsSet(key, value) {
 
 /* ─── Products ─── */
 export async function getProducts() {
-  return lsGet('admin_products', defaultProducts).map((p, i) => ({
+  return lsGet('admin_products', defaultProducts).map((p) => ({
     ...p,
-    id: p.id || i + 1,
-    image: p.image || p.img || defaultProducts[i % defaultProducts.length].img,
-    price: String(p.price || 0),
-    sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : undefined,
-    gallery: Array.isArray(p.gallery) && p.gallery.length > 0 ? p.gallery : undefined,
+    id: p.id != null ? p.id : Math.max(0, ...defaultProducts.map(d => d.id)) + 1,
+    image: p.image != null && p.image !== '' ? p.image : (p.img || ''),
+    price: Number(p.price) || 0,
+    sizes: Array.isArray(p.sizes) ? p.sizes : undefined,
+    gallery: Array.isArray(p.gallery) ? p.gallery : undefined,
   }))
 }
 export async function addProduct(product) {
-  const list = await getProducts()
+  const list = lsGet('admin_products', defaultProducts)
   const nextId = Math.max(...list.map(p => p.id || 0), 0) + 1
   const item = { ...product, id: nextId }
   list.push(item)
@@ -105,7 +105,7 @@ export async function addProduct(product) {
   return item
 }
 export async function updateProduct(id, updates) {
-  const list = await getProducts()
+  const list = lsGet('admin_products', defaultProducts)
   const idx = list.findIndex(p => p.id === id)
   if (idx === -1) return null
   list[idx] = { ...list[idx], ...updates }

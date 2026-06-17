@@ -97,6 +97,7 @@ function AdminProducts() {
     const product = {
       ...form,
       price: Number(form.price),
+      stock: form.stock !== '' ? Number(form.stock) : 0,
       gallery: form.gallery ? form.gallery.split('\n').map(s => s.trim()).filter(Boolean) : [],
     }
     if (editing) {
